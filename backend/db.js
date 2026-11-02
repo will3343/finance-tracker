@@ -10,7 +10,15 @@ db.exec(`
     category TEXT NOT NULL,
     date TEXT NOT NULL,
     note TEXT
-  )
+  );
+
+
+    CREATE TABLE IF NOT EXISTS budgets (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL UNIQUE,
+    monthly_limit REAL NOT NULL
+  );
+
 `);
 
 module.exports = db; 

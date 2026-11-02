@@ -55,8 +55,32 @@ app.get("/api/summary", (req, res) => {
 
   const income = totals.find((t) => t.type === "income")?.total || 0;
   const expenses = totals.find((t) => t.type === "expense")?.total || 0;
+  
+  const budgets = db.prepare("SELECT category, monthly_limit FROM budgets").all();
+  const limits = Object.fromEntries(budgets.map((b) => [b.category, b.monthly_limit]));
+  const categories = byCategory.map((c) => ({
+    ...c,
+    budget: limits[c.category] ?? null,
+    over: limits[c.category] != null && c.total > limits[c.category],
+  }));
 
-  res.json({ month, income, expenses, balance: income - expenses, byCategory });
+  res.json({ month, income, expenses, balance: income - expenses, byCategory: categories });
+});
+
+app.get("/api/budgets", (req, res) => {
+  res.json(db.prepare("SELECT category, monthly_limit FROM budgets").all());
+});
+
+app.put("/api/budgets/:category", (req, res) => {
+  const { monthly_limit } = req.body;
+  if (typeof monthly_limit !== "number" || monthly_limit < 0) {
+    return res.status(400).json({ error: "monthly_limit must be a positive number" });
+  }
+  db.prepare(
+    `INSERT INTO budgets (category, monthly_limit) VALUES (?, ?)
+     ON CONFLICT(category) DO UPDATE SET monthly_limit = excluded.monthly_limit`
+  ).run(req.params.category, monthly_limit);
+  res.json({ category: req.params.category, monthly_limit });
 });
 
 app.listen(3001, () => console.log("API running on http://localhost:3001"));
