@@ -3,26 +3,28 @@ import { api } from "./api";
 
 const today = () => new Date().toISOString().slice(0, 10);
 
-export default function TransactionForm({ onAdded }) {
-  const [type, setType] = useState("expense");
-  const [amount, setAmount] = useState("");
-  const [category, setCategory] = useState("");
-  const [date, setDate] = useState(today());
-  const [note, setNote] = useState("");
+export default function TransactionForm({ editing, onSaved, onCancel }) {
+  const [type, setType] = useState(editing?.type ?? "expense");
+  const [amount, setAmount] = useState(editing ? String(editing.amount) : "");
+  const [category, setCategory] = useState(editing?.category ?? "");
+  const [date, setDate] = useState(editing?.date ?? today());
+  const [note, setNote] = useState(editing?.note ?? "");
   const [error, setError] = useState("");
 
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    const body = { type, amount: Number(amount), category: category.trim(), date, note };
     try {
-      await api("/transactions", {
-        method: "POST",
-        body: { type, amount: Number(amount), category: category.trim(), date, note },
-      });
-      setAmount("");
-      setCategory("");
-      setNote("");
-      onAdded();
+      if (editing) {
+        await api(`/transactions/${editing.id}`, { method: "PUT", body });
+      } else {
+        await api("/transactions", { method: "POST", body });
+        setAmount("");
+        setCategory("");
+        setNote("");
+      }
+      onSaved();
     } catch (err) {
       setError(err.message);
     }
@@ -51,7 +53,12 @@ export default function TransactionForm({ onAdded }) {
       />
       <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
       <input placeholder="Note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-      <button type="submit">Add</button>
+      <button type="submit">{editing ? "Save" : "Add"}</button>
+      {editing && (
+        <button type="button" onClick={onCancel}>
+          Cancel
+        </button>
+      )}
       {error && <span style={{ color: "crimson" }}>{error}</span>}
     </form>
   );

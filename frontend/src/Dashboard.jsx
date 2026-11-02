@@ -8,6 +8,7 @@ export default function Dashboard({ onLogout }) {
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState(null);
   const [error, setError] = useState("");
+  const [editing, setEditing] = useState(null);
   const [refresh, setRefresh] = useState(0);
 
   const reload = () => setRefresh((n) => n + 1);
@@ -57,8 +58,16 @@ export default function Dashboard({ onLogout }) {
 
       {summary && <Summary summary={summary} onBudgetChanged={reload} onError={setError} />}
 
-      <h3>Add transaction</h3>
-      <TransactionForm onAdded={reload} />
+        <h3>{editing ? "Edit transaction" : "Add transaction"}</h3>
+            <TransactionForm
+        key={editing?.id ?? "new"}
+        editing={editing}
+        onSaved={() => {
+          setEditing(null);
+          reload();
+        }}
+        onCancel={() => setEditing(null)}
+      />
 
       <h3>Transactions</h3>
       {visible.length === 0 && <p>No transactions this month.</p>}
@@ -74,7 +83,10 @@ export default function Dashboard({ onLogout }) {
               {t.type === "income" ? "+" : "-"}
               {t.amount.toFixed(2)}
             </span>
+            
             <button onClick={() => remove(t.id)}>Delete</button>
+            <button onClick={() => setEditing(t)}>Edit</button>
+            
           </li>
         ))}
       </ul>
