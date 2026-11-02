@@ -1,4 +1,5 @@
 import { api } from "./api";
+import CategoryChart from "./CategoryChart";
 
 const money = (n) => Number(n).toFixed(2);
 
@@ -28,6 +29,7 @@ export default function Summary({ summary, onBudgetChanged, onError }) {
       </div>
 
       <h3>Spending by category</h3>
+      <CategoryChart data={summary.byCategory} />
       {summary.byCategory.length === 0 && <p>No expenses this month.</p>}
       <ul style={{ listStyle: "none", padding: 0 }}>
         {summary.byCategory.map((c) => (
