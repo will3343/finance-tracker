@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Login from "./Login";
+import Dashboard from "./Dashboard";
 import { getToken, clearToken } from "./api";
 
 export default function App() {
@@ -12,10 +13,6 @@ export default function App() {
 
   if (!loggedIn) return <Login onLogin={() => setLoggedIn(true)} />;
 
-  return (
-    <div style={{ maxWidth: 720, margin: "2rem auto" }}>
-      <h1>Finance Tracker</h1>
-      <button onClick={logout}>Log out</button>
-    </div>
-  );
+  return <Dashboard onLogout={logout} />;
 }
+
