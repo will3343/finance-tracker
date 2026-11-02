@@ -48,6 +48,18 @@ app.post("/api/login", (req, res) => {
 // Everything below this line requires a valid token
 app.use("/api", requireAuth);
 
+//---------------ValidateTransaction--------------
+
+function validateTransaction({ type, amount, category, date }) {
+  if (!["income", "expense"].includes(type)) return "type must be income or expense";
+  if (typeof amount !== "number" || !Number.isFinite(amount) || amount <= 0) {
+    return "amount must be a positive number";
+  }
+  if (typeof category !== "string" || !category.trim()) return "category is required";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date || "")) return "date must look like 2026-11-02";
+  return null;
+}
+
 // ---------- Transactions ----------
 app.get("/api/transactions", (req, res) => {
   const rows = db
@@ -58,9 +70,8 @@ app.get("/api/transactions", (req, res) => {
 
 app.post("/api/transactions", (req, res) => {
   const { type, amount, category, date, note } = req.body;
-  if (!type || !amount || !category || !date) {
-    return res.status(400).json({ error: "type, amount, category and date are required" });
-  }
+  const problem = validateTransaction(req.body);
+  if (problem) return res.status(400).json({ error: problem });
   const result = db
     .prepare(
       "INSERT INTO transactions (user_id, type, amount, category, date, note) VALUES (?, ?, ?, ?, ?, ?)"
@@ -142,4 +153,8 @@ app.get("/api/summary", (req, res) => {
   res.json({ month, income, expenses, balance: income - expenses, byCategory: categories });
 });
 
-app.listen(3001, () => console.log("API running on http://localhost:3001"));
+if (require.main === module) {
+  app.listen(3001, () => console.log("API running on http://localhost:3001"));
+}
+
+module.exports = app;

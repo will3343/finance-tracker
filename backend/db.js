@@ -1,6 +1,6 @@
 const Database = require("better-sqlite3");
 
-const db = new Database("finance.db");
+const db = new Database(process.env.DB_FILE || "finance.db");
 db.pragma("foreign_keys = ON");
 
 db.exec(`
